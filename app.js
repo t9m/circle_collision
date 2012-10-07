@@ -7,6 +7,7 @@ var MAX_SPEED = 16;
 var circles = [];
 var dragged_circle = null;
 var sx, sy, mx, my, ex, ey;
+var rfl = 0.9;
 var time, start_time;
 
 function drawBg() {
@@ -24,22 +25,22 @@ var Circle = (function() {
     this.rad = 6;
     this.x = x ? x : Math.floor(Math.random() * (canvas.width - this.rad * 2)) + this.rad;
     this.y = y ? y : Math.floor(Math.random() * (canvas.height - this.rad * 2)) + this.rad;
-    this.dx = dx ? dx : (Math.floor(Math.random() * 10) - 5) / 10;
-    this.dy = dy ? dy : (Math.floor(Math.random() * 10) - 5) / 10;
+    this.dx = dx ? dx : (Math.floor(Math.random() * 20) - 10) / 10;
+    this.dy = dy ? dy : (Math.floor(Math.random() * 20) - 10) / 10;
     this.color = "hsl(" + Math.floor(Math.random()*360) + ",100%,70%)";
     this.dragged = false;
   }
 
   Circle.prototype.update = function(x, y, dx, dy) {
-    this.dx = dx ? dx : this.dx > MAX_SPEED || this.dx < -1 * MAX_SPEED ? this.dx * 0.5 : this.dx;
-    this.dy = dy ? dy : this.dy > MAX_SPEED || this.dy < -1 * MAX_SPEED ? this.dy * 0.5 : this.dy;
+    this.dx = dx ? dx : this.dx;
+    this.dy = dy ? dy : this.dy;
     this.x = x ? x : this.x + this.dx;
     this.y = y ? y : this.y + this.dy;
     if ((this.x + this.rad > canvas.width && this.dx > 0) || (this.x - this.rad < 0 && this.dx < 0)) {
-      this.dx *= -1;
+      this.dx *= -rfl;
     }
     if ((this.y + this.rad > canvas.height && this.dy > 0) || (this.y - this.rad < 0 && this.dy < 0)) {
-      this.dy *= -1;
+      this.dy *= -rfl;
     }
   };
 
@@ -106,11 +107,11 @@ function calcCollision(a, b, vx, vy, adnm) {
   var b_mx = b.dx - vy * adjust_value;
   var b_my = b.dy + vx * adjust_value;
 
-  var a_sx = (a_mx * b_mx - a_mx + b_mx) / 2; 
-  var a_sy = (a_my * b_my - a_my + b_my) / 2;
+  var a_sx = (a_mx + b_mx - a_mx * rfl + b_mx * rfl) / 2; 
+  var a_sy = (a_my + b_my - a_my * rfl + b_my * rfl) / 2;
 
-  var b_sx = a_mx - b_mx + a_sx;
-  var b_sy = a_my - b_my + a_sy;
+  var b_sx = (a_mx - b_mx) * rfl + a_sx;
+  var b_sy = (a_my - b_my) * rfl + a_sy;
 
   var params = {
     a_dx: a_sx + a_rx,
@@ -151,6 +152,12 @@ function tapEnd(e) {
   time = e.timeStamp - start_time;
   var speedX = Math.floor((ex / time) * 10);
   var speedY = Math.floor((ey / time) * 10);
+  if (speedX > MAX_SPEED || speedX < -MAX_SPEED) {
+    speedX = MAX_SPEED;
+  }
+  if (speedY > MAX_SPEED || speedY < -MAX_SPEED) {
+    speedY = MAX_SPEED;
+  }
   if (dragged_circle) {
     dragged_circle.update(mx, my, speedX, speedY);
   }
@@ -169,7 +176,7 @@ function loop() {
 }
 
 function init() {
-  for (var i = 0; i < 50; i++) {
+  for (var i = 0; i < 100; i++) {
     circles.push(new Circle());
   }
   setInterval(function() {

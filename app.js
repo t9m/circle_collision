@@ -1,7 +1,16 @@
+window.requestAnimationFrame = (function(){
+  return window.requestAnimationFrame  ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame    ||
+    window.oRequestAnimationFrame      ||
+    window.msRequestAnimationFrame     ||
+    function(callback, element){
+      window.setTimeout(callback, 1000 / 60);
+    };
+})();
+
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
-var FPS = 60;
-var frame = Math.floor(1000/FPS);
 var MAX_SPEED = 16;
 
 var circles = [];
@@ -173,15 +182,14 @@ function loop() {
     }
     circles[i].draw();
   }
+  requestAnimationFrame(loop);
 }
 
 function init() {
-  for (var i = 0; i < 100; i++) {
+  for (var i = 0; i < 300; i++) {
     circles.push(new Circle());
   }
-  setInterval(function() {
-    loop();
-  }, frame);
+  loop();
 
   canvas.addEventListener('mousedown', tapStart, false);
   canvas.addEventListener('mousemove', tapMove, false);
